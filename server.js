@@ -1,27 +1,28 @@
-var express = require('express');
-var http = require('http');
-var bodyParser = require('body-parser');
+var server = require("http").createServer();
 
-var app = express();
-app.use(bodyParser.text
-({
-        type: function(req)
-        {
-            return 'text';
-        }
-}));
-
-
-app.post('/post', function (req, res)
-{
-    console.log(req.body);
-    res = res.status(200);
-    if (req.get('Content-Type'))
-    {
-        console.log("Content-Type: " + req.get('Content-Type'));
-        res = res.type(req.get('Content-Type'));
-    }
-    res.send(req.body);
+server.on("request", (request, response) => {
+    var body = [];
+    request.on("data", chunk => {
+        body.push(chunk);
+    });
+    request
+        .on("end", () => {
+            let bodyString = body.concat().toString();
+            console.log(bodyString);
+            response.end(bodyString);
+        })
+        .on("error", () => {
+            response.statusCode = 400;
+            response.end();
+        });
+    response.on("error", err => {
+        console.error(err);
+    });
+});
+server.listen(process.env.PORT || 8008, () => {
+    console.log("Server listening at 8008");
 });
 
-http.createServer(app).listen(8080);
+module.exports = server; // for testing
+
+//curl -d "echo" -H "Content-Type: text" -X POST http://localhost:8008
